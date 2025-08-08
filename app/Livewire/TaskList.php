@@ -38,7 +38,7 @@ class TaskList extends Component
         $tasks = auth()->user()
             ->items()
             ->where('type', 'task')
-            ->with('task')
+            ->with('task', 'tags')
             ->latest()
             ->paginate(10);
 

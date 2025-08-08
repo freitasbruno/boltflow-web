@@ -20,8 +20,15 @@
                         <div class="ml-4">
                             <h3 class="font-bold text-lg @if($item->task->status === 'completed') text-gray-500 line-through @endif">{{ $item->title }}</h3>
                             <p class="text-sm text-gray-600">{{ $item->description }}</p>
+                            <div class="mt-2 flex flex-wrap gap-1">
+                                @foreach($item->tags as $tag)
+                                    <span class="px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-200 rounded-full">
+                                        {{ $tag->name }}
+                                    </span>
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
+                    </div>                
                     <div class="text-right flex-shrink-0 ml-4">
                         <div class="flex space-x-2">
                            {{-- This button now dispatches an event to the TaskForm component --}}

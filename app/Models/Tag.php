@@ -54,4 +54,12 @@ class Tag extends Model
     {
         return $this->hasMany(Tag::class, 'parent_id');
     }
+
+    /**
+     * Get the shares associated with the tag.
+     */
+    public function shares(): HasMany
+    {
+        return $this->hasMany(SharedTag::class);
+    }
 }

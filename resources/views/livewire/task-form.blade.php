@@ -27,6 +27,16 @@
                     <option value="5">5 (Highest)</option>
                 </select>
             </div>
+
+            <div>
+                <x-label for="tags" value="{{ __('Tags (Optional)') }}" />
+                <select multiple wire:model="selectedTags" id="tags" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
+                    @foreach($this->tags as $tag)
+                        <option value="{{ $tag->id }}">{{ $tag->name }}</option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple tags.</p>
+            </div>
         </div>
     </x-slot>
 

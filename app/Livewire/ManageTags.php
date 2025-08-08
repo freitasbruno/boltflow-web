@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Tag;
 use App\Models\User;
+use App\Models\SharedTag;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Rule;
 use Livewire\Component;
@@ -26,6 +27,13 @@ class ManageTags extends Component
     public ?int $addingSubTagToId = null;
     #[Rule('required|string|min:3|max:50')]
     public string $newSubTagName = '';
+
+    // --- PROPERTIES FOR SHARING ---
+    public ?int $sharingTagId = null;
+    #[Rule('required|email|exists:users,email')]
+    public string $shareWithEmail = '';
+    #[Rule('required|in:view,edit')]
+    public string $permissionLevel = 'view';
 
     public function mount(): void
     {
@@ -111,6 +119,57 @@ class ManageTags extends Component
     }
     // -------------------------------
 
+    // --- METHODS FOR SHARING ---
+    public function startSharing(int $tagId): void
+    {
+        $this->sharingTagId = $tagId;
+        $this->reset('shareWithEmail', 'permissionLevel');
+    }
+
+    public function cancelSharing(): void
+    {
+        $this->sharingTagId = null;
+    }
+    
+    public function shareTag(): void
+    {
+        $this->validate([
+            'shareWithEmail' => 'required|email|exists:users,email',
+            'permissionLevel' => 'required|in:view,edit',
+        ]);
+
+        $tag = Tag::findOrFail($this->sharingTagId);
+        $this->authorize('update', $tag); // Only owner can share
+
+        $userToShareWith = User::where('email', $this->shareWithEmail)->first();
+
+        if ($userToShareWith->id === auth()->id()) {
+            $this->addError('shareWithEmail', 'You cannot share a tag with yourself.');
+            return;
+        }
+
+        SharedTag::create([
+            'tag_id' => $tag->id,
+            'user_id' => $userToShareWith->id,
+            'permission_level' => $this->permissionLevel,
+        ]);
+        
+        // Reset state and reload tags to show the new share
+        $this->sharingTagId = null;
+        $this->loadTags();
+    }
+    
+    public function revokeShare(int $shareId): void
+    {
+        $share = SharedTag::findOrFail($shareId);
+        // Authorize that the current user owns the parent tag
+        $this->authorize('update', $share->tag);
+
+        $share->delete();
+        $this->loadTags(); // Reload tags to reflect the revoked share
+    }
+    // --- END OF METHODS FOR SHARING ---
+    
     public function loadTags(): void
     {
         $this->tags = auth()->user()

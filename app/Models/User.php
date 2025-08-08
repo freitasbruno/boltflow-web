@@ -81,4 +81,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Tag::class);
     }
+
+    /**
+     * Get all of the shared tags for the user.
+     */
+    public function sharedWithMe(): HasMany
+    {
+        return $this->hasMany(SharedTag::class);
+    }
 }
