@@ -11,6 +11,10 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+Route::view('tasks', 'tasks')
+    ->middleware(['auth', 'verified'])
+    ->name('tasks');
+    
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
@@ -30,3 +34,4 @@ Route::middleware([
         return view('dashboard');
     })->name('dashboard');
 });
+

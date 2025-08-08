@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Item extends Model
 {
@@ -36,5 +37,10 @@ class Item extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
-    }          
+    }  
+    
+    public function task(): HasOne
+    {
+        return $this->hasOne(Task::class);
+    }
 }
