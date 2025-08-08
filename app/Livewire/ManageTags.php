@@ -3,59 +3,123 @@
 namespace App\Livewire;
 
 use App\Models\Tag;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Rule;
 use Livewire\Component;
+use Livewire\Attributes\On;
 
 class ManageTags extends Component
 {
-    /**
-     * The new tag's name.
-     */
     #[Rule('required|string|min:3|max:50')]
     public string $name = '';
 
-    /**
-     * The collection of existing tags.
-     * @var Collection
-     */
     public Collection $tags;
 
-    /**
-     * Mount the component and load initial data.
-     */
+    public ?int $editingTagId = null;
+    
+    // --- PROPERTIES FOR EDITING ---
+    #[Rule('required|string|min:3|max:50')]
+    public string $editingTagName = '';
+
+    // --- PROPERTIES FOR SUBTAGS ---
+    public ?int $addingSubTagToId = null;
+    #[Rule('required|string|min:3|max:50')]
+    public string $newSubTagName = '';
+
     public function mount(): void
     {
         $this->loadTags();
     }
 
-    /**
-     * Save a new tag to the database.
-     */
     public function save(): void
     {
-        $this->validate();
+        $this->validateOnly('name');
 
         auth()->user()->tags()->create([
             'name' => $this->name,
         ]);
 
-        $this->reset('name'); // Clear the input field
-        $this->loadTags(); // Refresh the list of tags
+        $this->reset('name');
+        $this->loadTags();
     }
 
-    /**
-     * Helper method to load tags from the database.
-     */
+    // --- METHODS FOR SUB-TAGS ---
+    public function startAddingSubTag(int $tagId): void
+    {
+        $this->addingSubTagToId = $tagId;
+        $this->newSubTagName = '';
+    }
+
+    public function cancelAddingSubTag(): void
+    {
+        $this->reset('addingSubTagToId', 'newSubTagName');
+    }
+
+    public function saveSubTag(): void
+    {
+        $this->validateOnly('newSubTagName');
+
+        $parentTag = Tag::findOrFail($this->addingSubTagToId);
+        $this->authorize('update', $parentTag);
+
+        auth()->user()->tags()->create([
+            'parent_id' => $this->addingSubTagToId,
+            'name' => $this->newSubTagName,
+        ]);
+
+        $this->cancelAddingSubTag();
+        $this->loadTags();
+    }
+
+    // --- METHODS FOR EDITING ---
+    public function startEditing(int $tagId, string $tagName): void
+    {
+        $this->editingTagId = $tagId;
+        $this->editingTagName = $tagName;
+    }
+
+    #[On('cancel-editing')]
+    public function cancelEditing(): void
+    {
+        $this->reset('editingTagId', 'editingTagName');
+    }
+
+    public function update(): void
+    {
+        $this->validateOnly('editingTagName');
+
+        $tag = Tag::findOrFail($this->editingTagId);
+        $this->authorize('update', $tag); // Optional but good practice
+
+        $tag->update([
+            'name' => $this->editingTagName,
+        ]);
+
+        $this->cancelEditing();
+        $this->loadTags();
+    }
+
+    // --- METHOD FOR DELETING ---
+    public function delete(int $tagId): void
+    {
+        $tag = Tag::findOrFail($tagId);
+        $this->authorize('delete', $tag); // Optional but good practice
+
+        $tag->delete();
+        $this->loadTags();
+    }
+    // -------------------------------
+
     public function loadTags(): void
     {
-        // We only load top-level tags for now (where parent_id is null)
-        $this->tags = auth()->user()->tags()->whereNull('parent_id')->get();
+        $this->tags = auth()->user()
+            ->tags()
+            ->whereNull('parent_id')
+            ->with('children') // Eager load the children relationship
+            ->get();
     }
 
-    /**
-     * Render the component's view.
-     */
     public function render()
     {
         return view('livewire.manage-tags');
