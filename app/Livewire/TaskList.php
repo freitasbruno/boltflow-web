@@ -35,10 +35,23 @@ class TaskList extends Component
     #[On('task-saved')] // Listens for the event from the form
     public function render()
     {
-        $tasks = auth()->user()
-            ->items()
+        $userId = auth()->id();
+
+        // Get the IDs of all tags shared with the current user
+        $sharedTagIds = auth()->user()->sharedWithMe()->pluck('tag_id');
+
+        // The new query finds items the user owns OR items tagged with a shared tag
+        $tasks = Item::query()
             ->where('type', 'task')
-            ->with('task', 'tags')
+            ->with(['task', 'tags', 'user']) // Eager load the item's owner
+            ->where(function ($query) use ($userId, $sharedTagIds) {
+                // Condition 1: The user owns the item
+                $query->where('user_id', $userId)
+                      // Condition 2: Or the item is tagged with a shared tag
+                      ->orWhereHas('tags', function ($subQuery) use ($sharedTagIds) {
+                          $subQuery->whereIn('tags.id', $sharedTagIds);
+                      });
+            })
             ->latest()
             ->paginate(10);
 

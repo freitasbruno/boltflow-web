@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Item;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Auth\Access\Response;
 
 class ItemPolicy
@@ -37,7 +38,15 @@ class ItemPolicy
      */
     public function update(User $user, Item $item): bool
     {
-        return $user->id === $item->user_id;
+        if ($user->id === $item->user_id) {
+            return true;
+        }
+
+        // Otherwise, allow if the item has a tag that is shared with the user with 'edit' permission
+        return $item->tags()->whereHas('shares', function (Builder $query) use ($user) {
+            $query->where('user_id', $user->id)
+                  ->where('permission_level', 'edit');
+        })->exists();
     }
 
     /**

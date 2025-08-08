@@ -19,6 +19,11 @@
                         >
                         <div class="ml-4">
                             <h3 class="font-bold text-lg @if($item->task->status === 'completed') text-gray-500 line-through @endif">{{ $item->title }}</h3>
+                            @if($item->user_id !== auth()->id())
+                                <span class="text-xs font-semibold text-gray-500">
+                                    From: {{ $item->user->name }}
+                                </span>
+                            @endif
                             <p class="text-sm text-gray-600">{{ $item->description }}</p>
                             <div class="mt-2 flex flex-wrap gap-1">
                                 @foreach($item->tags as $tag)

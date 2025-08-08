@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Auth\Access\Response;
 
 class TaskPolicy
@@ -37,7 +38,7 @@ class TaskPolicy
      */
     public function update(User $user, Task $task): bool
     {
-        return $user->id === $task->item->user_id;
+        return $user->can('update', $task->item);
     }
 
     /**
