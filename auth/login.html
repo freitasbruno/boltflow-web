@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <title>Login - Boltflow MVP</title>
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+
+    <main class="auth-container">
+        <form id="login-form" class="auth-form">
+            <h2>Login</h2>
+            
+            <div id="form-message" class="form-message" aria-live="polite"></div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+                <div id="email-error" class="error-message"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+                <div id="password-error" class="error-message"></div>
+            </div>
+            
+            <button type="submit" class="btn">Login</button>
+            
+            <p class="auth-switch">
+                Don't have an account? <a href="register.html">Register here</a>
+            </p>
+        </form>
+    </main>
+    
+    <script src="auth.js" defer></script>
+</body>
+</html>

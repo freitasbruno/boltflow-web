@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Find the registration form
     const registerForm = document.getElementById('register-form');
+    // Find the login form
+    const loginForm = document.getElementById('login-form');
 
     if (registerForm) {
         // Add a 'submit' event listener to the registration form
@@ -101,7 +103,98 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Helper Functions ---
+    // =====================================
+    // --- NEW LOGIN FORM HANDLER ---
+    // =====================================
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (event) => {
+            // 1. Prevent the default form submission
+            event.preventDefault();
+
+            // 2. Clear previous errors
+            clearErrors();
+            const formMessage = document.getElementById('form-message');
+            formMessage.textContent = '';
+            formMessage.className = 'form-message'; // Reset class
+
+            // 3. Get form data
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // 4. Client-side validation
+            let isValid = true;
+            if (email.trim() === '') {
+                showError('email-error', 'Email is required.');
+                isValid = false;
+            } else if (!validateEmail(email)) {
+                showError('email-error', 'Please enter a valid email address.');
+                isValid = false;
+            }
+            if (password === '') {
+                showError('password-error', 'Password is required.');
+                isValid = false;
+            }
+
+            if (!isValid) {
+                return; // Stop if client-side validation fails
+            }
+
+            // 5. Prepare data to send to the server
+            const formData = {
+                email: email,
+                password: password
+            };
+
+            try {
+                // 6. Use the fetch() API to send data to the backend
+                const response = await fetch('../api/login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                // 7. Handle the server's response
+                if (result.status === 'success') {
+                    // Show success message
+                    formMessage.textContent = result.message;
+                    formMessage.className = 'form-message success';
+                    
+                    // Redirect to the dashboard
+                    // We use the redirect URL from the server
+                    setTimeout(() => {
+                        window.location.href = result.redirect;
+                    }, 1000); // 1-second delay
+
+                } else {
+                    // Show general error message
+                    formMessage.textContent = result.message || 'An error occurred.';
+                    formMessage.className = 'form-message error';
+                    
+                    // Show specific field errors if the server sent them
+                    if (result.errors) {
+                        for (const key in result.errors) {
+                            showError(`${key}-error`, result.errors[key]);
+                        }
+                    }
+                }
+
+            } catch (error) {
+                // Handle network errors
+                console.error('Fetch error:', error);
+                formMessage.textContent = 'A network error occurred. Please try again.';
+                formMessage.className = 'form-message error';
+            }
+        });
+    }
+
+    // =====================================
+    // --- HELPER FUNCTIONS (Existing) ---
+    // =====================================
 
     function showError(elementId, message) {
         const errorElement = document.getElementById(elementId);
