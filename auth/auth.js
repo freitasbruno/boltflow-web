@@ -1,17 +1,32 @@
 // Wait for the DOM to be fully loaded before running the script
 document.addEventListener('DOMContentLoaded', () => {
 
+    // =====================================
+    // --- NEW LOGOUT HANDLER ---
+    // =====================================
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('status') === 'logged_out') {
+        const formMessage = document.getElementById('form-message');
+        if (formMessage) {
+            formMessage.textContent = 'You have been logged out.';
+            formMessage.className = 'form-message success';
+        }
+    }
+    
+    // =====================================
+    // --- REGISTER FORM HANDLER ---
+    // =====================================
+    
     // Find the registration form
     const registerForm = document.getElementById('register-form');
-    // Find the login form
-    const loginForm = document.getElementById('login-form');
-
+    
     if (registerForm) {
         // Add a 'submit' event listener to the registration form
         registerForm.addEventListener('submit', async (event) => {
             // 1. Prevent the default form submission (which reloads the page)
             event.preventDefault();
-
+            
             // 2. Clear previous errors
             clearErrors();
             const formMessage = document.getElementById('form-message');
@@ -104,8 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =====================================
-    // --- NEW LOGIN FORM HANDLER ---
+    // --- LOGIN FORM HANDLER ---
     // =====================================
+
+    // Find the login form
+    const loginForm = document.getElementById('login-form');
 
     if (loginForm) {
         loginForm.addEventListener('submit', async (event) => {
@@ -175,6 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     formMessage.textContent = result.message || 'An error occurred.';
                     formMessage.className = 'form-message error';
                     
+                    // Clear password field on error
+                    document.getElementById('password').value = ''; 
+                    
                     // Show specific field errors if the server sent them
                     if (result.errors) {
                         for (const key in result.errors) {
@@ -191,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
 
     // =====================================
     // --- HELPER FUNCTIONS (Existing) ---
