@@ -1,0 +1,6 @@
+# Sensitive configuration files
+core/config.php
+
+# OS-specific files
+.DS_Store
+Thumbs.db
