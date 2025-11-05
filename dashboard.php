@@ -154,6 +154,67 @@ $user_id = $_SESSION['user_id'];
             </div>
         </div>
     </div>
+
+    <div id="edit-task-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-task-title" style="display: none;">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h3 id="edit-task-title">Edit Task</h3>
+                <button id="close-edit-task-modal" class="modal-close" aria-label="Close modal">&times;</button>
+            </header>
+            
+            <div class="modal-body">
+                <form id="edit-task-form">
+                    <input type="hidden" id="edit-task-id">
+                    
+                    <div id="edit-task-message" class="form-message" aria-live="polite"></div>
+                    
+                    <div class="form-group">
+                        <label for="edit-task-title">Title (Required)</label>
+                        <input type="text" id="edit-task-title-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-task-description">Description</label>
+                        <textarea id="edit-task-description" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-task-status">Status</label>
+                            <select id="edit-task-status">
+                                <option value="Pending">Pending</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Done">Done</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-task-priority">Priority</label>
+                            <select id="edit-task-priority">
+                                <option value="1">Low</option>
+                                <option value="2">Medium</option>
+                                <option value="3">High</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-task-due-date">Due Date</label>
+                            <input type="datetime-local" id="edit-task-due-date">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tags</label>
+                        <div id="edit-task-tag-list" class="tag-checkbox-list">
+                            <p>Loading tags...</p>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="dashboard.js" defer></script>
+    
 </body>
 </html>

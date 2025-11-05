@@ -14,6 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Tag List Elements ---
     const tagListContainer = document.getElementById('tag-list');
     const editTagMessage = document.getElementById('edit-tag-message');
+    
+    // --- Edit Task Modal Elements ---
+    const editTaskModal = document.getElementById('edit-task-modal');
+    const closeEditTaskModalBtn = document.getElementById('close-edit-task-modal');
+    const editTaskForm = document.getElementById('edit-task-form');
+    const editTaskTagList = document.getElementById('edit-task-tag-list');
+    const editTaskMessage = document.getElementById('edit-task-message');
 
     // --- Reset the modal state ---
     function resetTagModal() {
@@ -242,19 +249,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Load Tags into the Task Form on Page Load ---
     async function loadTagsForForms() {
-        if (!taskTagList && !filterTag) return; 
+        // Add `editTaskTagList` to the check
+        if (!taskTagList && !filterTag && !editTaskTagList) return; 
         
         try {
+            // (Your existing fetch logic...)
             const response = await fetch('api/get_tags.php');
             const data = await response.json();
 
             if (data.status === 'success') {
-                // Clear existing options
+                // (Your existing .innerHTML clears...)
                 if (taskTagList) taskTagList.innerHTML = ''; 
                 if (filterTag) filterTag.innerHTML = '<option value="">All Tags</option>';
+                if (editTaskTagList) editTaskTagList.innerHTML = ''; // NEW
 
                 if (data.tags.length === 0) {
                     if (taskTagList) taskTagList.innerHTML = '<p>No tags created yet.</p>';
+                    if (editTaskTagList) editTaskTagList.innerHTML = '<p>No tags created yet.</p>'; // NEW
                     return;
                 }
                 
@@ -263,6 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // 1. Populate Create Task Form (Checkboxes)
                     if (taskTagList) {
+                        // (Your existing code for this)
                         const tagOption = document.createElement('label');
                         tagOption.className = 'tag-option';
                         tagOption.innerHTML = `<input type="checkbox" value="${tag.id}"> ${tagName}`;
@@ -271,19 +283,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // 2. Populate Filter Dropdown
                     if (filterTag) {
+                        // (Your existing code for this)
                         const filterOption = document.createElement('option');
                         filterOption.value = tag.id;
                         filterOption.textContent = tagName;
                         filterTag.appendChild(filterOption);
                     }
+
+                    // 3. Populate Edit Task Form (Checkboxes) - NEW
+                    if (editTaskTagList) {
+                        const tagOption = document.createElement('label');
+                        tagOption.className = 'tag-option';
+                        // We add a name attribute to group them for querying
+                        tagOption.innerHTML = `<input type="checkbox" name="edit-tags" value="${tag.id}"> ${tagName}`;
+                        editTaskTagList.appendChild(tagOption);
+                    }
                 });
 
             } else {
+                // (Your existing error handling...)
                 if (taskTagList) taskTagList.innerHTML = `<p class="error">${data.message}</p>`;
+                if (editTaskTagList) editTaskTagList.innerHTML = `<p class="error">${data.message}</p>`; // NEW
             }
         } catch (error) {
+            // (Your existing catch block...)
             console.error('Error loading tags for forms:', error);
             if (taskTagList) taskTagList.innerHTML = '<p class="error">Failed to load tags.</p>';
+            if (editTaskTagList) editTaskTagList.innerHTML = '<p class="error">Failed to load tags.</p>'; // NEW
         }
     }
     
@@ -345,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- NEW: LOAD TASKS (READ) ---
+    // --- LOAD TASKS (READ) ---
     async function loadTasks() {
         // Build query string from current filters
         const params = new URLSearchParams(currentFilters).toString();
@@ -368,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- NEW: Helper to render task list HTML ---
+    // --- Helper to render task list HTML ---
     function renderTaskList(tasks) {
         taskListContainer.innerHTML = ''; // Clear
         if (tasks.length === 0) {
@@ -407,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- NEW: Helper to render pagination controls ---
+    // --- Helper to render pagination controls ---
     function renderPagination(pagination) {
         paginationContainer.innerHTML = ''; // Clear
         if (pagination.total_pages <= 1) return;
@@ -428,7 +454,113 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- NEW: Event Listeners for Filters & Pagination ---
+    // --- Event Listeners for Edit Modal ---
+
+    // 1. Open Modal (Event Delegation on task list)
+    taskListContainer.addEventListener('click', (event) => {
+        const editButton = event.target.closest('.btn-edit-task');
+        if (editButton) {
+            const taskItem = event.target.closest('.task-item');
+            const taskId = taskItem.dataset.taskId;
+            openEditTaskModal(taskId);
+        }
+    });
+
+    // 2. Close Modal
+    closeEditTaskModalBtn.addEventListener('click', () => {
+        editTaskModal.style.display = 'none';
+    });
+
+    // 3. Submit Edit Form
+    editTaskForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        showMessage(editTaskMessage, '', 'success'); // Clear message
+
+        // 1. Get all form values
+        const id = document.getElementById('edit-task-id').value;
+        const title = document.getElementById('edit-task-title-input').value.trim();
+        const description = document.getElementById('edit-task-description').value.trim();
+        const status = document.getElementById('edit-task-status').value;
+        const priority = document.getElementById('edit-task-priority').value;
+        const due_date = document.getElementById('edit-task-due-date').value;
+
+        // 2. Get selected tag IDs
+        const selectedTags = [];
+        const checkboxes = editTaskTagList.querySelectorAll('input[name="edit-tags"]:checked');
+        checkboxes.forEach(cb => {
+            selectedTags.push(cb.value);
+        });
+
+        // 3. Client-side validation
+        if (!title) {
+            showMessage(editTaskMessage, 'Title is required.', 'error');
+            return;
+        }
+
+        // 4. Prepare data
+        const taskData = { id, title, description, status, priority, due_date, tag_ids: selectedTags };
+
+        // 5. Send to backend
+        try {
+            const response = await fetch('api/update_task.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(taskData)
+            });
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                // Success! Close modal and refresh the task list
+                editTaskModal.style.display = 'none';
+                loadTasks(); // Reload the main task list
+            } else {
+                showMessage(editTaskMessage, data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error updating task:', error);
+            showMessage(editTaskMessage, 'A network error occurred.', 'error');
+        }
+    });
+
+    // --- NEW: Helper function to open and populate the edit modal ---
+    async function openEditTaskModal(taskId) {
+        showMessage(editTaskMessage, '', 'success'); // Clear old messages
+        
+        try {
+            const response = await fetch(`api/get_task_details.php?id=${taskId}`);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                const { task, tag_ids } = data;
+
+                // 1. Populate form fields
+                document.getElementById('edit-task-id').value = taskId;
+                document.getElementById('edit-task-title-input').value = task.title;
+                document.getElementById('edit-task-description').value = task.description;
+                document.getElementById('edit-task-status').value = task.status;
+                document.getElementById('edit-task-priority').value = task.priority;
+                document.getElementById('edit-task-due-date').value = task.due_date;
+
+                // 2. Populate checkboxes
+                const checkboxes = editTaskTagList.querySelectorAll('input[name="edit-tags"]');
+                checkboxes.forEach(cb => {
+                    // Check the box if its value is in the tag_ids array
+                    cb.checked = tag_ids.includes(cb.value);
+                });
+
+                // 3. Show the modal
+                editTaskModal.style.display = 'flex';
+
+            } else {
+                alert(`Error: ${data.message}`); // Show a simple alert on failure
+            }
+        } catch (error) {
+            console.error('Error fetching task details:', error);
+            alert('A network error occurred.');
+        }
+    }
+
+    // --- Event Listeners for Filters & Pagination ---
     
     // 1. Filter form changes
     if (filterForm) {
