@@ -18,7 +18,7 @@ jobs:
       # 2. Create the production config.php file
       # This securely takes your secret and writes it to a file
       - name: Create production config.php
-        run: echo '${{ secrets.PROD_CONFIG_PHP }}' > core/config.php
+        run: echo "${{ secrets.PROD_CONFIG_PHP }}" > core/config.php
         
       # 3. Deploy all files to your FTP server
       - name: FTP Deploy
