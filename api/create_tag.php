@@ -1,4 +1,5 @@
 <?php
+
 require_once '../core/config.php';
 require_once '../core/auth_check.php'; // Protects the endpoint
 
