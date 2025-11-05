@@ -411,12 +411,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Format data
             const dueDate = task.due_date ? new Date(task.due_date).toLocaleString() : 'N/A';
+            
+            const safeTitle = escapeHTML(task.title);
             const tagsHTML = task.tag_names ? 
-                task.tag_names.split(', ').map(tag => `<span class="task-tag">${tag}</span>`).join('') : '';
+                task.tag_names.split(', ').map(tag => `<span class="task-tag">${escapeHTML(tag)}</span>`).join('') : '';
 
             taskItem.innerHTML = `
-                <div class="task-item-details">
-                    <h4>${task.title}</h4>
+            <div class="task-item-details">
+                <h4>${safeTitle}</h4>
                     <div class="task-item-meta">
                         <p>Status: <span>${task.status}</span></p>
                         <p>Priority: <span>${priorityMap[task.priority]}</span></p>
@@ -635,5 +637,17 @@ document.addEventListener('DOMContentLoaded', () => {
             element.textContent = '';
             element.className = 'form-message';
         }
+    }
+
+    // Add this helper function alongside your showMessage function
+    function escapeHTML(str) {
+        if (str === null || str === undefined) return '';
+        return str.replace(/[&<>"']/g, m => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[m]));
     }
 });
