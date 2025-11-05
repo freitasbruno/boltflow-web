@@ -34,9 +34,64 @@ $user_id = $_SESSION['user_id'];
         </nav>
     </header>
 
-    <main>
-        <h2>Your Tasks</h2>
-        <p>Task management features will go here.</p>
+<main class="dashboard-main">
+        <section class="new-task-section">
+            <h3>Create New Task</h3>
+            <form id="new-task-form">
+                <div id="new-task-message" class="form-message" aria-live="polite"></div>
+                
+                <div class="form-group">
+                    <label for="task-title">Title (Required)</label>
+                    <input type="text" id="task-title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="task-description">Description</label>
+                    <textarea id="task-description" rows="3"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="task-status">Status</label>
+                        <select id="task-status">
+                            <option value="Pending" selected>Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Done">Done</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-priority">Priority</label>
+                        <select id="task-priority">
+                            <option value="1">Low</option>
+                            <option value="2" selected>Medium</option>
+                            <option value="3">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-due-date">Due Date</label>
+                        <input type="datetime-local" id="task-due-date">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Tags</label>
+                    <div id="task-tag-list" class="tag-checkbox-list">
+                        <p>Loading tags...</p>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn">Create Task</button>
+            </form>
+        </section>
+
+        <hr class="section-divider">
+
+        <section class="task-list-section">
+            <h2>Your Tasks</h2>
+            <div id="task-list-container">
+                <p>Tasks will appear here...</p>
+            </div>
+        </section>
     </main>
 
     <div id="tag-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="tag-modal-title" style="display: none;">

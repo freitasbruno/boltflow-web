@@ -1,3 +1,70 @@
+/* --- Main Layout --- */
+.dashboard-main {
+    max-width: 900px;
+    margin: 2rem auto;
+}
+
+.new-task-section {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.new-task-section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+}
+
+.section-divider {
+    margin: 2rem 0;
+    border: 0;
+    border-top: 1px solid #eee;
+}
+
+/* --- Form Layout --- */
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+    min-width: 150px; /* Allow wrapping on small screens */
+}
+
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+/* --- Tag Checkbox List --- */
+.tag-checkbox-list {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 1rem;
+}
+
+.tag-checkbox-list .tag-option {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.tag-checkbox-list .tag-option input {
+    margin-right: 0.5rem;
+}
+
 /* --- Modal Styles --- */
 .modal {
     position: fixed;

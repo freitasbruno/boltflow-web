@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tagListContainer = document.getElementById('tag-list');
     const editTagMessage = document.getElementById('edit-tag-message');
 
-    // --- NEW: Function to reset the modal state ---
+    // --- Reset the modal state ---
     function resetTagModal() {
         // 1. Clear the "Create New Tag" input
         newTagNameInput.value = '';
@@ -219,6 +219,121 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- NEW: Task Form Elements ---
+    const newTaskForm = document.getElementById('new-task-form');
+    const taskTagList = document.getElementById('task-tag-list');
+    const newTaskMessage = document.getElementById('new-task-message');
+
+    // --- NEW: Load Tags into the Task Form on Page Load ---
+    async function loadTagsForTaskForm() {
+        if (!taskTagList) return; // Only run if the element exists
+        
+        try {
+            const response = await fetch('api/get_tags.php');
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                taskTagList.innerHTML = ''; // Clear "Loading..."
+                if (data.tags.length === 0) {
+                    taskTagList.innerHTML = '<p>No tags created yet. Go to "Manage Tags" to add some.</p>';
+                    return;
+                }
+                
+                // Create a checkbox for each tag
+                data.tags.forEach(tag => {
+                    const tagOption = document.createElement('label');
+                    tagOption.className = 'tag-option';
+                    
+                    // Sanitize tag name before inserting
+                    const tagName = document.createTextNode(tag.name); 
+                    
+                    tagOption.innerHTML = `
+                        <input type="checkbox" value="${tag.id}">
+                    `;
+                    tagOption.appendChild(tagName);
+                    taskTagList.appendChild(tagOption);
+                });
+
+            } else {
+                taskTagList.innerHTML = `<p class="error">${data.message}</p>`;
+            }
+        } catch (error) {
+            console.error('Error loading tags for task form:', error);
+            taskTagList.innerHTML = '<p class="error">Failed to load tags.</p>';
+        }
+    }
+    
+    // Call the new function on page load
+    loadTagsForTaskForm();
+
+    // --- NEW: Handle New Task Form Submission ---
+    if (newTaskForm) {
+        newTaskForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            showMessage(newTaskMessage, '', 'success'); // Clear previous messages
+            
+            // 1. Get all form values
+            const title = document.getElementById('task-title').value.trim();
+            const description = document.getElementById('task-description').value.trim();
+            const status = document.getElementById('task-status').value;
+            const priority = document.getElementById('task-priority').value;
+            const due_date = document.getElementById('task-due-date').value;
+
+            // 2. Get selected tag IDs
+            const selectedTags = [];
+            const checkboxes = taskTagList.querySelectorAll('input[type="checkbox"]:checked');
+            checkboxes.forEach(cb => {
+                selectedTags.push(cb.value);
+            });
+
+            // 3. Client-side validation
+            if (!title) {
+                showMessage(newTaskMessage, 'Title is required.', 'error');
+                return;
+            }
+
+            // 4. Prepare data for fetch()
+            const taskData = {
+                title: title,
+                description: description,
+                status: status,
+                priority: priority,
+                due_date: due_date,
+                tag_ids: selectedTags // Send as an array
+            };
+
+            // 5. Send data to the backend
+            try {
+                const response = await fetch('api/create_task.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(taskData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showMessage(newTaskMessage, data.message, 'success');
+                    newTaskForm.reset(); // Clear the form
+                    
+                    // Uncheck all tag checkboxes
+                    checkboxes.forEach(cb => cb.checked = false);
+                    
+                    // We'll add the function to reload the task list here later
+                    // loadTasks(); 
+                    console.log('Task created! ID:', data.new_task_id);
+
+                } else {
+                    showMessage(newTaskMessage, data.message, 'error');
+                }
+
+            } catch (error) {
+                console.error('Error creating task:', error);
+                showMessage(newTaskMessage, 'A network error occurred.', 'error');
+            }
+        });
+    }
+    
     // --- Helper function for messages ---
     function showMessage(element, message, type = 'error') {
         if (message) {
@@ -230,5 +345,4 @@ document.addEventListener('DOMContentLoaded', () => {
             element.className = 'form-message';
         }
     }
-
 });
