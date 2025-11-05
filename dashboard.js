@@ -459,10 +459,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Open Modal (Event Delegation on task list)
     taskListContainer.addEventListener('click', (event) => {
         const editButton = event.target.closest('.btn-edit-task');
+        const deleteButton = event.target.closest('.btn-delete-task');
+        
         if (editButton) {
             const taskItem = event.target.closest('.task-item');
             const taskId = taskItem.dataset.taskId;
             openEditTaskModal(taskId);
+        }
+
+        // --- DELETE TASK HANDLER ---
+        if (deleteButton) {
+            const taskItem = event.target.closest('.task-item');
+            const taskId = taskItem.dataset.taskId;
+            
+            // Show a native browser confirmation prompt [cite: 427]
+            if (confirm('Are you sure you want to delete this task?')) {
+                deleteTask(taskId);
+            }
         }
     });
 
@@ -522,7 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- NEW: Helper function to open and populate the edit modal ---
+    // --- Helper function to open and populate the edit modal ---
     async function openEditTaskModal(taskId) {
         showMessage(editTaskMessage, '', 'success'); // Clear old messages
         
@@ -556,6 +569,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error fetching task details:', error);
+            alert('A network error occurred.');
+        }
+    }
+
+    // --- Helper function to delete a task ---
+    async function deleteTask(taskId) {
+        try {
+            const response = await fetch('api/delete_task.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: taskId })
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                // Refresh the task list to show the deletion [cite: 424]
+                loadTasks();
+            } else {
+                alert(`Error: ${data.message}`); // Show a simple alert on failure
+            }
+
+        } catch (error) {
+            console.error('Error deleting task:', error);
             alert('A network error occurred.');
         }
     }
