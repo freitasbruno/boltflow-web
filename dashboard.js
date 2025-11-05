@@ -219,120 +219,242 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- NEW: Task Form Elements ---
+    // --- Task Form Elements ---
     const newTaskForm = document.getElementById('new-task-form');
     const taskTagList = document.getElementById('task-tag-list');
     const newTaskMessage = document.getElementById('new-task-message');
+    
+    // --- Task List & Filter Elements ---
+    const taskListContainer = document.getElementById('task-list-container');
+    const filterForm = document.getElementById('filter-form');
+    const filterStatus = document.getElementById('filter-status');
+    const filterPriority = document.getElementById('filter-priority');
+    const filterTag = document.getElementById('filter-tag');
+    const paginationContainer = document.getElementById('pagination-container');
 
-    // --- NEW: Load Tags into the Task Form on Page Load ---
-    async function loadTagsForTaskForm() {
-        if (!taskTagList) return; // Only run if the element exists
+    // --- Store current filters ---
+    let currentFilters = {
+        status: '',
+        priority: '',
+        tag_id: '',
+        page: 1
+    };
+
+    // --- Load Tags into the Task Form on Page Load ---
+    async function loadTagsForForms() {
+        if (!taskTagList && !filterTag) return; 
         
         try {
             const response = await fetch('api/get_tags.php');
             const data = await response.json();
 
             if (data.status === 'success') {
-                taskTagList.innerHTML = ''; // Clear "Loading..."
+                // Clear existing options
+                if (taskTagList) taskTagList.innerHTML = ''; 
+                if (filterTag) filterTag.innerHTML = '<option value="">All Tags</option>';
+
                 if (data.tags.length === 0) {
-                    taskTagList.innerHTML = '<p>No tags created yet. Go to "Manage Tags" to add some.</p>';
+                    if (taskTagList) taskTagList.innerHTML = '<p>No tags created yet.</p>';
                     return;
                 }
                 
-                // Create a checkbox for each tag
                 data.tags.forEach(tag => {
-                    const tagOption = document.createElement('label');
-                    tagOption.className = 'tag-option';
+                    const tagName = tag.name.replace(/[&<>"']/g, m => ({'&': '&amp;','<': '&lt;','>': '&gt;','"': '&quot;',"'": '&#39;'}[m]));
                     
-                    // Sanitize tag name before inserting
-                    const tagName = document.createTextNode(tag.name); 
+                    // 1. Populate Create Task Form (Checkboxes)
+                    if (taskTagList) {
+                        const tagOption = document.createElement('label');
+                        tagOption.className = 'tag-option';
+                        tagOption.innerHTML = `<input type="checkbox" value="${tag.id}"> ${tagName}`;
+                        taskTagList.appendChild(tagOption);
+                    }
                     
-                    tagOption.innerHTML = `
-                        <input type="checkbox" value="${tag.id}">
-                    `;
-                    tagOption.appendChild(tagName);
-                    taskTagList.appendChild(tagOption);
+                    // 2. Populate Filter Dropdown
+                    if (filterTag) {
+                        const filterOption = document.createElement('option');
+                        filterOption.value = tag.id;
+                        filterOption.textContent = tagName;
+                        filterTag.appendChild(filterOption);
+                    }
                 });
 
             } else {
-                taskTagList.innerHTML = `<p class="error">${data.message}</p>`;
+                if (taskTagList) taskTagList.innerHTML = `<p class="error">${data.message}</p>`;
             }
         } catch (error) {
-            console.error('Error loading tags for task form:', error);
-            taskTagList.innerHTML = '<p class="error">Failed to load tags.</p>';
+            console.error('Error loading tags for forms:', error);
+            if (taskTagList) taskTagList.innerHTML = '<p class="error">Failed to load tags.</p>';
         }
     }
     
-    // Call the new function on page load
-    loadTagsForTaskForm();
+    // Call the function on page load
+    loadTagsForForms();
 
-    // --- NEW: Handle New Task Form Submission ---
+    // --- Handle New Task Form Submission ---
     if (newTaskForm) {
         newTaskForm.addEventListener('submit', async (event) => {
+            // ... (Your existing form submission logic)
             event.preventDefault();
-            showMessage(newTaskMessage, '', 'success'); // Clear previous messages
+            showMessage(newTaskMessage, '', 'success');
             
-            // 1. Get all form values
             const title = document.getElementById('task-title').value.trim();
+            // ... (get description, status, etc.)
             const description = document.getElementById('task-description').value.trim();
             const status = document.getElementById('task-status').value;
             const priority = document.getElementById('task-priority').value;
             const due_date = document.getElementById('task-due-date').value;
-
-            // 2. Get selected tag IDs
             const selectedTags = [];
             const checkboxes = taskTagList.querySelectorAll('input[type="checkbox"]:checked');
-            checkboxes.forEach(cb => {
-                selectedTags.push(cb.value);
-            });
-
-            // 3. Client-side validation
+            checkboxes.forEach(cb => { selectedTags.push(cb.value); });
             if (!title) {
                 showMessage(newTaskMessage, 'Title is required.', 'error');
                 return;
             }
-
-            // 4. Prepare data for fetch()
             const taskData = {
                 title: title,
                 description: description,
                 status: status,
                 priority: priority,
                 due_date: due_date,
-                tag_ids: selectedTags // Send as an array
+                tag_ids: selectedTags
             };
 
-            // 5. Send data to the backend
             try {
                 const response = await fetch('api/create_task.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(taskData)
                 });
-                
                 const data = await response.json();
                 
                 if (data.status === 'success') {
                     showMessage(newTaskMessage, data.message, 'success');
-                    newTaskForm.reset(); // Clear the form
-                    
-                    // Uncheck all tag checkboxes
+                    newTaskForm.reset(); 
                     checkboxes.forEach(cb => cb.checked = false);
                     
-                    // We'll add the function to reload the task list here later
-                    // loadTasks(); 
-                    console.log('Task created! ID:', data.new_task_id);
-
+                    // --- NEW: Refresh the task list ---
+                    loadTasks(); 
+                    
                 } else {
                     showMessage(newTaskMessage, data.message, 'error');
                 }
-
             } catch (error) {
                 console.error('Error creating task:', error);
                 showMessage(newTaskMessage, 'A network error occurred.', 'error');
             }
         });
     }
+
+    // --- NEW: LOAD TASKS (READ) ---
+    async function loadTasks() {
+        // Build query string from current filters
+        const params = new URLSearchParams(currentFilters).toString();
+        
+        taskListContainer.innerHTML = '<p>Loading tasks...</p>';
+        
+        try {
+            const response = await fetch(`api/get_tasks.php?${params}`);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                renderTaskList(data.tasks);
+                renderPagination(data.pagination);
+            } else {
+                taskListContainer.innerHTML = `<p class="error">${data.message}</p>`;
+            }
+        } catch (error) {
+            console.error('Error loading tasks:', error);
+            taskListContainer.innerHTML = '<p class="error">Failed to load tasks.</p>';
+        }
+    }
+    
+    // --- NEW: Helper to render task list HTML ---
+    function renderTaskList(tasks) {
+        taskListContainer.innerHTML = ''; // Clear
+        if (tasks.length === 0) {
+            taskListContainer.innerHTML = '<p>No tasks found. Try creating one!</p>';
+            return;
+        }
+
+        const priorityMap = { 1: 'Low', 2: 'Medium', 3: 'High' };
+
+        tasks.forEach(task => {
+            const taskItem = document.createElement('div');
+            taskItem.className = 'task-item';
+            taskItem.setAttribute('data-task-id', task.id);
+
+            // Format data
+            const dueDate = task.due_date ? new Date(task.due_date).toLocaleString() : 'N/A';
+            const tagsHTML = task.tag_names ? 
+                task.tag_names.split(', ').map(tag => `<span class="task-tag">${tag}</span>`).join('') : '';
+
+            taskItem.innerHTML = `
+                <div class="task-item-details">
+                    <h4>${task.title}</h4>
+                    <div class="task-item-meta">
+                        <p>Status: <span>${task.status}</span></p>
+                        <p>Priority: <span>${priorityMap[task.priority]}</span></p>
+                        <p>Due: <span>${dueDate}</span></p>
+                    </div>
+                    <div class="task-item-tags">${tagsHTML}</div>
+                </div>
+                <div class="task-item-actions">
+                    <button class="btn-secondary btn-edit-task">Edit</button>
+                    <button class="btn-danger btn-delete-task">Delete</button>
+                </div>
+            `;
+            taskListContainer.appendChild(taskItem);
+        });
+    }
+
+    // --- NEW: Helper to render pagination controls ---
+    function renderPagination(pagination) {
+        paginationContainer.innerHTML = ''; // Clear
+        if (pagination.total_pages <= 1) return;
+
+        for (let i = 1; i <= pagination.total_pages; i++) {
+            if (i === pagination.page) {
+                const pageSpan = document.createElement('span');
+                pageSpan.className = 'current';
+                pageSpan.textContent = i;
+                paginationContainer.appendChild(pageSpan);
+            } else {
+                const pageLink = document.createElement('a');
+                pageLink.href = '#';
+                pageLink.textContent = i;
+                pageLink.setAttribute('data-page', i);
+                paginationContainer.appendChild(pageLink);
+            }
+        }
+    }
+
+    // --- NEW: Event Listeners for Filters & Pagination ---
+    
+    // 1. Filter form changes
+    if (filterForm) {
+        filterForm.addEventListener('change', (event) => {
+            // Update current filters object
+            currentFilters.status = filterStatus.value;
+            currentFilters.priority = filterPriority.value;
+            currentFilters.tag_id = filterTag.value;
+            currentFilters.page = 1; // Reset to page 1
+            loadTasks(); // Reload tasks
+        });
+    }
+    
+    // 2. Pagination link clicks (Event Delegation)
+    if (paginationContainer) {
+        paginationContainer.addEventListener('click', (event) => {
+            event.preventDefault();
+            if (event.target.tagName === 'A' && event.target.dataset.page) {
+                currentFilters.page = parseInt(event.target.dataset.page, 10);
+                loadTasks(); // Reload tasks for the new page
+            }
+        });
+    }
+
+    // --- Initial Load ---
+    loadTasks();
     
     // --- Helper function for messages ---
     function showMessage(element, message, type = 'error') {

@@ -87,10 +87,41 @@ $user_id = $_SESSION['user_id'];
         <hr class="section-divider">
 
         <section class="task-list-section">
-            <h2>Your Tasks</h2>
-            <div id="task-list-container">
-                <p>Tasks will appear here...</p>
+            <div class="task-list-header">
+                <h2>Your Tasks</h2>
+                
+                <form id="filter-form" class="filter-controls">
+                    <div class="form-group">
+                        <label for="filter-status">Status</label>
+                        <select id="filter-status">
+                            <option value="">All Statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Done">Done</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-priority">Priority</label>
+                        <select id="filter-priority">
+                            <option value="">All Priorities</option>
+                            <option value="1">Low</option>
+                            <option value="2">Medium</option>
+                            <option value="3">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-tag">Tag</label>
+                        <select id="filter-tag">
+                            <option value="">All Tags</option>
+                        </select>
+                    </div>
+                </form>
             </div>
+            
+            <div id="task-list-container">
+                <p>Loading tasks...</p>
+            </div>
+            <nav id="pagination-container" class="pagination" aria-label="Task pagination"></nav>
         </section>
     </main>
 

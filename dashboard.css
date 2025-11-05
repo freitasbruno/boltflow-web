@@ -65,6 +65,118 @@
     margin-right: 0.5rem;
 }
 
+/* --- Task List Header & Filters --- */
+.task-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-controls .form-group {
+    margin-bottom: 0;
+}
+.filter-controls label {
+    font-size: 0.875rem;
+    font-weight: normal;
+}
+
+/* --- Task List & Items --- */
+#task-list-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    min-height: 100px;
+}
+
+.task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+.task-item:last-child {
+    border-bottom: none;
+}
+
+.task-item-details {
+    flex-grow: 1;
+}
+
+.task-item-details h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.task-item-meta {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.875rem;
+    color: #555;
+}
+
+.task-item-meta span {
+    font-weight: 600;
+}
+
+.task-item-tags {
+    margin-top: 0.5rem;
+}
+.task-tag {
+    display: inline-block;
+    background: #eee;
+    color: #333;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-right: 0.25rem;
+}
+
+.task-item-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+/* Use small buttons */
+.task-item-actions .btn,
+.task-item-actions .btn-secondary,
+.task-item-actions .btn-danger {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.75rem;
+}
+
+/* --- Pagination --- */
+.pagination {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+}
+.pagination a, .pagination span {
+    display: inline-block;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #007bff;
+}
+.pagination span.current {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+    font-weight: 600;
+}
+.pagination a:hover {
+    background-color: #f4f4f4;
+}
+
 /* --- Modal Styles --- */
 .modal {
     position: fixed;
