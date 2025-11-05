@@ -24,19 +24,15 @@ jobs:
       - name: FTP Deploy
         uses: SamKirkland/FTP-Deploy-Action@4.3.3
         with:
-          # Your FTP server address (e.g., ftp.yourdomain.com)
+          # These are read from your GitHub Secrets
           server: ${{ secrets.FTP_SERVER }}
-          # Your FTP username
           username: ${{ secrets.FTP_USERNAME }}
-          # Your FTP password
           password: ${{ secrets.FTP_PASSWORD }}
-          # The remote directory on your server to deploy to (e.g., /public_html/boltflow/)
-          # '.' means the root directory your FTP user lands in.
-          # Use './' if you want to deploy to the root.
-          # Use '/public_html/your_app/' if you need a subfolder.
-          server-dir: /public_html/boltflow/
           
-          # We are ignoring the .git files and our local config
+          # This is your upload folder
+          server-dir: /public_html/
+          
+          # Exclude files
           exclude: |
             .git*
             .gitignore
