@@ -37,52 +37,16 @@ $user_id = $_SESSION['user_id'];
 
 <main class="dashboard-main">
         <section class="new-task-section">
-            <h3>Create New Task</h3>
-            <form id="new-task-form">
-                <div id="new-task-message" class="form-message" aria-live="polite"></div>
-                
+            <h3>Add a Task</h3>
+            <form id="quick-task-form" class="quick-task-form">
                 <div class="form-group">
-                    <label for="task-title">Title (Required)</label>
-                    <input type="text" id="task-title" required>
+                    <label for="quick-task-title" class="visually-hidden">Task Title</label>
+                    <input type="text" id="quick-task-title" placeholder="e.g., Buy groceries..." required>
                 </div>
-                
-                <div class="form-group">
-                    <label for="task-description">Description</label>
-                    <textarea id="task-description" rows="3"></textarea>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="task-status">Status</label>
-                        <select id="task-status">
-                            <option value="Pending" selected>Pending</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Done">Done</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="task-priority">Priority</label>
-                        <select id="task-priority">
-                            <option value="1">Low</option>
-                            <option value="2" selected>Medium</option>
-                            <option value="3">High</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="task-due-date">Due Date</label>
-                        <input type="datetime-local" id="task-due-date">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Tags</label>
-                    <div id="task-tag-list" class="tag-checkbox-list">
-                        <p>Loading tags...</p>
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn">Create Task</button>
+                <button type="submit" class="btn">Quick Add</button>
+                <button type="button" id="open-detailed-task-btn" class="btn-secondary">Add Details</button>
             </form>
+            <div id="quick-task-message" class="form-message" aria-live="polite"></div>
         </section>
 
         <hr class="section-divider">
@@ -156,60 +120,59 @@ $user_id = $_SESSION['user_id'];
         </div>
     </div>
 
-    <div id="edit-task-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-task-title" style="display: none;">
+    <div id="task-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="task-modal-title" style="display: none;">
         <div class="modal-content">
             <header class="modal-header">
-                <h3 id="edit-task-title">Edit Task</h3>
-                <button id="close-edit-task-modal" class="modal-close" aria-label="Close modal">&times;</button>
+                <h3 id="task-modal-title">Create Task</h3>
+                <button id="close-task-modal" class="modal-close" aria-label="Close modal">&times;</button>
             </header>
             
             <div class="modal-body">
-                <form id="edit-task-form">
-                    <input type="hidden" id="edit-task-id">
+                <form id="task-form">
+                    <input type="hidden" id="task-id">
                     
-                    <div id="edit-task-message" class="form-message" aria-live="polite"></div>
+                    <div id="task-modal-message" class="form-message" aria-live="polite"></div>
                     
                     <div class="form-group">
-                        <label for="edit-task-title">Title (Required)</label>
-                        <input type="text" id="edit-task-title-input" required>
+                        <label for="task-title-input">Title (Required)</label>
+                        <input type="text" id="task-title-input" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="edit-task-description">Description</label>
-                        <textarea id="edit-task-description" rows="3"></textarea>
+                        <label for="task-description">Description</label>
+                        <textarea id="task-description" rows="3"></textarea>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="edit-task-status">Status</label>
-                            <select id="edit-task-status">
+                            <label for="task-status">Status</label>
+                            <select id="task-status">
                                 <option value="Pending">Pending</option>
                                 <option value="In Progress">In Progress</option>
                                 <option value="Done">Done</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="edit-task-priority">Priority</label>
-                            <select id="edit-task-priority">
+                            <label for="task-priority">Priority</label>
+                            <select id="task-priority">
                                 <option value="1">Low</option>
-                                <option value="2">Medium</option>
-                                <option value="3">High</option>
+                                <option value="2" selected>Medium</option> <option value="3">High</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="edit-task-due-date">Due Date</label>
-                            <input type="datetime-local" id="edit-task-due-date">
+                            <label for="task-due-date">Due Date</label>
+                            <input type="datetime-local" id="task-due-date">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label>Tags</label>
-                        <div id="edit-task-tag-list" class="tag-checkbox-list">
+                        <div id="task-modal-tag-list" class="tag-checkbox-list">
                             <p>Loading tags...</p>
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn">Save Changes</button>
+                    <button type="submit" id="task-modal-submit-btn" class="btn">Create Task</button>
                 </form>
             </div>
         </div>
