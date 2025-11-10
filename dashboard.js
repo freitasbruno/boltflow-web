@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tagListContainer = document.getElementById('tag-list');
     const editTagMessage = document.getElementById('edit-tag-message');
     
-    // --- Task Modal Elements (REFACTORED) ---
+    // --- Task Modal Elements ---
     const taskModal = document.getElementById('task-modal');
     const closeTaskModalBtn = document.getElementById('close-task-modal');
     const openDetailedTaskBtn = document.getElementById('open-detailed-task-btn');
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const taskModalTitle = document.getElementById('task-modal-title');
     const taskModalSubmitBtn = document.getElementById('task-modal-submit-btn');
 
-    // --- Quick Task Form (NEW) ---
+    // --- Quick Task Form ---
     const quickTaskForm = document.getElementById('quick-task-form');
     const quickTaskTitleInput = document.getElementById('quick-task-title');
     const quickTaskMessage = document.getElementById('quick-task-message');
@@ -47,10 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // =================================================================
-    // --- TAG MODAL LOGIC (Unchanged) ---
+    // --- TAG MODAL LOGIC ---
     // =================================================================
 
-    // --- Reset the modal state ---
     function resetTagModal() {
         newTagNameInput.value = '';
         showMessage(createTagMessage, '', 'success');
@@ -58,10 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loadTags();
     }
 
-    // --- Show/Hide Modal ---
     openModalBtn.addEventListener('click', () => {
-        tagModal.style.display = 'flex';
-        loadTags(); 
+        tagModal.style.display = 'block'; // Use 'block' for Bootstrap CSS-only modal
     });
 
     closeModalBtn.addEventListener('click', () => {
@@ -76,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 1. LOAD TAGS (READ) ---
     async function loadTags() {
         tagListContainer.innerHTML = '<p>Loading tags...</p>';
         try {
@@ -86,14 +82,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.status === 'success') {
                 renderTagList(data.tags);
             } else {
-                tagListContainer.innerHTML = `<p class="error">${data.message}</p>`;
+                tagListContainer.innerHTML = `<p class="text-danger">${data.message}</p>`;
             }
         } catch (error) {
             console.error('Error loading tags:', error);
-            tagListContainer.innerHTML = '<p class="error">Failed to load tags.</p>';
+            tagListContainer.innerHTML = '<p class="text-danger">Failed to load tags.</p>';
         }
     }
 
+    // --- UPDATED: renderTagList to use Bootstrap classes ---
     function renderTagList(tags) {
         tagListContainer.innerHTML = '';
         if (tags.length === 0) {
@@ -103,22 +100,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tags.forEach(tag => {
             const tagItem = document.createElement('div');
-            tagItem.className = 'tag-item';
+            // Use Bootstrap list-group classes
+            tagItem.className = 'list-group-item d-flex justify-content-between align-items-center';
             tagItem.setAttribute('data-tag-id', tag.id);
             const tagName = escapeHTML(tag.name);
 
             tagItem.innerHTML = `
-                <input type="text" class="tag-name-input" value="${tagName}" readonly>
-                <div class="tag-item-actions">
-                    <button class="btn-secondary btn-edit">Edit</button>
-                    <button class="btn-danger btn-delete">Delete</button>
+                <input type="text" class="tag-item-input flex-grow-1" value="${tagName}" readonly>
+                <div class="tag-item-actions ms-2">
+                    <button class="btn btn-outline-secondary btn-sm btn-edit">Edit</button>
+                    <button class="btn btn-outline-danger btn-sm btn-delete">Delete</button>
                 </div>
             `;
             tagListContainer.appendChild(tagItem);
         });
     }
 
-    // --- 2. CREATE TAG ---
     createTagForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const tagName = newTagNameInput.value.trim();
@@ -149,22 +146,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 3. UPDATE & DELETE (Event Delegation) ---
     tagListContainer.addEventListener('click', async (event) => {
         const target = event.target;
-        const tagItem = target.closest('.tag-item');
+        const tagItem = target.closest('.list-group-item');
         if (!tagItem) return;
         
         const tagId = tagItem.dataset.tagId;
-        const input = tagItem.querySelector('.tag-name-input');
+        const input = tagItem.querySelector('.tag-item-input');
         
         if (target.classList.contains('btn-edit')) {
             if (target.textContent === 'Edit') {
                 input.removeAttribute('readonly');
                 input.focus();
                 target.textContent = 'Save';
-                target.classList.remove('btn-secondary');
-                target.classList.add('btn');
+                target.classList.remove('btn-outline-secondary');
+                target.classList.add('btn-primary'); // Make it blue
             } else {
                 const newName = input.value.trim();
                 if (!newName) {
@@ -193,11 +189,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.status === 'success') {
-                const input = saveButton.closest('.tag-item').querySelector('.tag-name-input');
+                const input = saveButton.closest('.list-group-item').querySelector('.tag-item-input');
                 input.setAttribute('readonly', true);
                 saveButton.textContent = 'Edit';
-                saveButton.classList.remove('btn');
-                saveButton.classList.add('btn-secondary');
+                saveButton.classList.remove('btn-primary');
+                saveButton.classList.add('btn-outline-secondary');
             } else {
                 showMessage(editTagMessage, data.message, 'error');
             }
@@ -216,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ id: id })
             });
             const data = await response.json();
-
             if (data.status === 'success') {
                 tagItemElement.remove();
             } else {
@@ -229,10 +224,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =================================================================
-    // --- TASK LOGIC (REFACTORED) ---
+    // --- TASK LOGIC ---
     // =================================================================
 
-    // --- Load Tags into Forms on Page Load ---
+    // --- UPDATED: loadTagsForForms to use Bootstrap classes ---
     async function loadTagsForForms() {
         if (!taskModalTagList && !filterTag) return; 
         
@@ -262,23 +257,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // 2. Populate Task Modal (Checkboxes)
                     if (taskModalTagList) {
-                        const tagOption = document.createElement('label');
-                        tagOption.className = 'tag-option';
-                        tagOption.innerHTML = `<input type="checkbox" name="task-tags" value="${tag.id}"> ${tagName}`;
+                        const tagOption = document.createElement('div');
+                        // Use Bootstrap form-check
+                        tagOption.className = 'form-check';
+                        tagOption.innerHTML = `
+                            <input class="form-check-input" type="checkbox" name="task-tags" value="${tag.id}" id="tag-check-${tag.id}">
+                            <label class="form-check-label" for="tag-check-${tag.id}">${tagName}</label>
+                        `;
                         taskModalTagList.appendChild(tagOption);
                     }
                 });
 
             } else {
-                if (taskModalTagList) taskModalTagList.innerHTML = `<p class="error">${data.message}</p>`;
+                if (taskModalTagList) taskModalTagList.innerHTML = `<p class="text-danger">${data.message}</p>`;
             }
         } catch (error) {
             console.error('Error loading tags for forms:', error);
-            if (taskModalTagList) taskModalTagList.innerHTML = '<p class="error">Failed to load tags.</p>';
+            if (taskModalTagList) taskModalTagList.innerHTML = '<p class="text-danger">Failed to load tags.</p>';
         }
     }
     
-    // --- Handle Quick Task Form Submission (NEW) ---
     if (quickTaskForm) {
         quickTaskForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -289,8 +287,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 showMessage(quickTaskMessage, 'Title is required.', 'error');
                 return;
             }
-
-            // Only send the title. api/create_task.php will use defaults.
             const taskData = { title: title };
 
             try {
@@ -303,12 +299,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (data.status === 'success') {
                     showMessage(quickTaskMessage, data.message, 'success');
-                    quickTaskForm.reset(); // Clear the input
-                    loadTasks(); // Refresh the task list
-                    
-                    // Hide success message after 2 seconds
+                    quickTaskForm.reset();
+                    loadTasks(); 
                     setTimeout(() => showMessage(quickTaskMessage, '', 'success'), 2000);
-
                 } else {
                     showMessage(quickTaskMessage, data.message, 'error');
                 }
@@ -319,7 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // --- LOAD TASKS (READ) (Unchanged) ---
     async function loadTasks() {
         const params = new URLSearchParams(currentFilters).toString();
         taskListContainer.innerHTML = '<p>Loading tasks...</p>';
@@ -332,15 +324,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderTaskList(data.tasks);
                 renderPagination(data.pagination);
             } else {
-                taskListContainer.innerHTML = `<p class="error">${data.message}</p>`;
+                taskListContainer.innerHTML = `<p class="text-danger">${data.message}</p>`;
             }
         } catch (error) {
             console.error('Error loading tasks:', error);
-            taskListContainer.innerHTML = '<p class="error">Failed to load tasks.</p>';
+            taskListContainer.innerHTML = '<p class="text-danger">Failed to load tasks.</p>';
         }
     }
     
-    // --- Render Task List HTML (Unchanged) ---
+    // --- UPDATED: renderTaskList to use Bootstrap classes ---
     function renderTaskList(tasks) {
         taskListContainer.innerHTML = ''; 
         if (tasks.length === 0) {
@@ -349,60 +341,75 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const priorityMap = { 1: 'Low', 2: 'Medium', 3: 'High' };
+        const priorityBadge = { 1: 'bg-secondary', 2: 'bg-info', 3: 'bg-warning' };
+        const statusBadge = { 
+            'Pending': 'bg-secondary', 
+            'In Progress': 'bg-primary', 
+            'Done': 'bg-success' 
+        };
 
+        const listGroup = document.createElement('div');
+        listGroup.className = 'list-group';
+        
         tasks.forEach(task => {
             const taskItem = document.createElement('div');
-            taskItem.className = 'task-item';
+            taskItem.className = 'list-group-item';
             taskItem.setAttribute('data-task-id', task.id);
 
             const dueDate = task.due_date ? new Date(task.due_date).toLocaleString() : 'N/A';
             const safeTitle = escapeHTML(task.title);
             const tagsHTML = task.tag_names ? 
-                task.tag_names.split(', ').map(tag => `<span class="task-tag">${escapeHTML(tag)}</span>`).join('') : '';
+                task.tag_names.split(', ').map(tag => `<span class="badge bg-light text-dark me-1">${escapeHTML(tag)}</span>`).join('') : '';
 
             taskItem.innerHTML = `
-            <div class="task-item-details">
-                <h4>${safeTitle}</h4>
-                    <div class="task-item-meta">
-                        <p>Status: <span>${task.status}</span></p>
-                        <p>Priority: <span>${priorityMap[task.priority]}</span></p>
-                        <p>Due: <span>${dueDate}</span></p>
-                    </div>
-                    <div class="task-item-tags">${tagsHTML}</div>
-                </div>
-                <div class="task-item-actions">
-                    <button class="btn-secondary btn-edit-task">Edit</button>
-                    <button class="btn-danger btn-delete-task">Delete</button>
-                </div>
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">${safeTitle}</h5>
+                <small class="text-muted">Due: ${dueDate}</small>
+            </div>
+            <div class="d-flex gap-3 mb-2 small text-muted">
+                <span>Status: <span class="badge ${statusBadge[task.status]}">${task.status}</span></span>
+                <span>Priority: <span class="badge ${priorityBadge[task.priority]}">${priorityMap[task.priority]}</span></span>
+            </div>
+            <div class="mb-2">${tagsHTML}</div>
+            <div class="task-item-actions">
+                <button class="btn btn-outline-secondary btn-sm btn-edit-task">Edit</button>
+                <button class="btn btn-outline-danger btn-sm btn-delete-task">Delete</button>
+            </div>
             `;
-            taskListContainer.appendChild(taskItem);
+            listGroup.appendChild(taskItem);
         });
+        taskListContainer.appendChild(listGroup);
     }
 
-    // --- Render Pagination (Unchanged) ---
+    // --- UPDATED: renderPagination to use Bootstrap classes ---
     function renderPagination(pagination) {
         paginationContainer.innerHTML = '';
         if (pagination.total_pages <= 1) return;
 
+        const nav = document.createElement('ul');
+        nav.className = 'pagination';
+
         for (let i = 1; i <= pagination.total_pages; i++) {
+            const li = document.createElement('li');
+            li.className = 'page-item';
             if (i === pagination.page) {
-                const pageSpan = document.createElement('span');
-                pageSpan.className = 'current';
-                pageSpan.textContent = i;
-                paginationContainer.appendChild(pageSpan);
-            } else {
-                const pageLink = document.createElement('a');
-                pageLink.href = '#';
-                pageLink.textContent = i;
-                pageLink.setAttribute('data-page', i);
-                paginationContainer.appendChild(pageLink);
+                li.classList.add('active');
             }
+
+            const a = document.createElement('a');
+            a.className = 'page-link';
+            a.href = '#';
+            a.textContent = i;
+            a.setAttribute('data-page', i);
+            
+            li.appendChild(a);
+            nav.appendChild(li);
         }
+        paginationContainer.appendChild(nav);
     }
 
-    // --- Task Modal & List Click Handlers (REFACTORED) ---
+    // --- Task Modal & List Click Handlers ---
 
-    // 1. Open Modal Buttons
     openDetailedTaskBtn.addEventListener('click', () => {
         openTaskModal('create');
     });
@@ -412,13 +419,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const deleteButton = event.target.closest('.btn-delete-task');
         
         if (editButton) {
-            const taskItem = event.target.closest('.task-item');
+            const taskItem = event.target.closest('.list-group-item');
             const taskId = taskItem.dataset.taskId;
             openTaskModal('edit', taskId);
         }
 
         if (deleteButton) {
-            const taskItem = event.target.closest('.task-item');
+            const taskItem = event.target.closest('.list-group-item');
             const taskId = taskItem.dataset.taskId;
             if (confirm('Are you sure you want to delete this task?')) {
                 deleteTask(taskId);
@@ -426,17 +433,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 2. Close Modal
     closeTaskModalBtn.addEventListener('click', () => {
         taskModal.style.display = 'none';
     });
+    
+    // Close modal if user clicks outside of the modal-dialog
+    window.addEventListener('click', (event) => {
+        if (event.target == taskModal) {
+            taskModal.style.display = 'none';
+        }
+    });
 
-    // 3. Submit Task Modal (Handles BOTH Create and Edit)
     taskForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         showMessage(taskModalMessage, '', 'success');
 
-        // 1. Get mode and all form values
         const mode = taskForm.dataset.mode;
         const id = document.getElementById('task-id').value;
         const title = document.getElementById('task-title-input').value.trim();
@@ -445,37 +456,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const priority = document.getElementById('task-priority').value;
         const due_date = document.getElementById('task-due-date').value;
 
-        // 2. Get selected tag IDs
         const selectedTags = [];
+        // Use new checkbox name
         const checkboxes = taskModalTagList.querySelectorAll('input[name="task-tags"]:checked');
         checkboxes.forEach(cb => {
             selectedTags.push(cb.value);
         });
 
-        // 3. Client-side validation
         if (!title) {
             showMessage(taskModalMessage, 'Title is required.', 'error');
             return;
         }
-
-        // 4. Prepare data
-        const taskData = { id, title, description, status, priority, due_date, tag_ids: selectedTags };
         
-        // 5. Determine API endpoint and payload
+        const taskData = { id, title, description, status, priority, due_date, tag_ids: selectedTags };
         let apiUrl = '';
         let payload = {};
 
         if (mode === 'create') {
             apiUrl = 'api/create_task.php';
-            // Don't send the 'id' when creating
             payload = { title, description, status, priority, due_date, tag_ids: selectedTags };
         } else {
             apiUrl = 'api/update_task.php';
-            // Send the 'id' when updating
             payload = taskData; 
         }
 
-        // 6. Send to backend
         try {
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -486,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.status === 'success') {
                 taskModal.style.display = 'none';
-                loadTasks(); // Reload the main task list
+                loadTasks(); 
             } else {
                 showMessage(taskModalMessage, data.message, 'error');
             }
@@ -496,31 +500,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Helper function to open and populate the task modal (REFACTORED) ---
     async function openTaskModal(mode, taskId = null) {
         showMessage(taskModalMessage, '', 'success');
-        taskForm.reset(); // Clear the form
+        taskForm.reset(); 
         
-        // 1. Reset tag checkboxes
         const checkboxes = taskModalTagList.querySelectorAll('input[name="task-tags"]');
         checkboxes.forEach(cb => cb.checked = false);
 
         if (mode === 'create') {
-            // --- CREATE MODE ---
             taskForm.dataset.mode = 'create';
             taskModalTitle.textContent = 'Create New Task';
             taskModalSubmitBtn.textContent = 'Create Task';
             
-            // Set defaults
             document.getElementById('task-id').value = '';
             document.getElementById('task-status').value = 'Pending';
             document.getElementById('task-priority').value = '2'; // Medium
             document.getElementById('task-due-date').value = '';
 
-            taskModal.style.display = 'flex';
+            taskModal.style.display = 'block'; // Use 'block'
 
         } else if (mode === 'edit' && taskId) {
-            // --- EDIT MODE ---
             taskForm.dataset.mode = 'edit';
             taskModalTitle.textContent = 'Edit Task';
             taskModalSubmitBtn.textContent = 'Save Changes';
@@ -532,7 +531,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.status === 'success') {
                     const { task, tag_ids } = data;
 
-                    // 1. Populate form fields
                     document.getElementById('task-id').value = taskId;
                     document.getElementById('task-title-input').value = task.title;
                     document.getElementById('task-description').value = task.description;
@@ -540,13 +538,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('task-priority').value = task.priority;
                     document.getElementById('task-due-date').value = task.due_date;
 
-                    // 2. Populate checkboxes
                     checkboxes.forEach(cb => {
                         cb.checked = tag_ids.includes(cb.value);
                     });
 
-                    // 3. Show the modal
-                    taskModal.style.display = 'flex';
+                    taskModal.style.display = 'block'; // Use 'block'
 
                 } else {
                     alert(`Error: ${data.message}`);
@@ -558,7 +554,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Helper function to delete a task (Unchanged) ---
     async function deleteTask(taskId) {
         try {
             const response = await fetch('api/delete_task.php', {
@@ -578,7 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Filters & Pagination Listeners (Unchanged) ---
+    // --- Filters & Pagination Listeners ---
     if (filterForm) {
         filterForm.addEventListener('change', () => {
             currentFilters.status = filterStatus.value;
@@ -592,8 +587,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (paginationContainer) {
         paginationContainer.addEventListener('click', (event) => {
             event.preventDefault();
-            if (event.target.tagName === 'A' && event.target.dataset.page) {
-                currentFilters.page = parseInt(event.target.dataset.page, 10);
+            const pageLink = event.target.closest('.page-link');
+            if (pageLink && pageLink.dataset.page) {
+                currentFilters.page = parseInt(pageLink.dataset.page, 10);
                 loadTasks(); 
             }
         });
@@ -603,19 +599,19 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTasks();
     loadTagsForForms();
     
-    // --- Helper function for messages ---
+    // --- UPDATED: showMessage to use Bootstrap classes ---
     function showMessage(element, message, type = 'error') {
-        if (!element) return; // Guard clause
+        if (!element) return;
         if (message) {
             element.textContent = message;
-            element.className = `form-message ${type}`;
+            // Use Bootstrap alert classes
+            element.className = `alert ${type === 'success' ? 'alert-success' : 'alert-danger'}`;
         } else {
             element.textContent = '';
-            element.className = 'form-message';
+            element.className = ''; // Remove all classes
         }
     }
 
-    // --- Helper function to escape HTML ---
     function escapeHTML(str) {
         if (str === null || str === undefined) return '';
         return str.replace(/[&<>"']/g, m => ({
@@ -626,29 +622,4 @@ document.addEventListener('DOMContentLoaded', () => {
             "'": '&#39;'
         }[m]));
     }
-
-    // --- Helper class for screen-reader only text (NEW) ---
-    // We need to add this CSS to `dashboard.css` for the "visually-hidden" class
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .visually-hidden {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            margin: -1px;
-            padding: 0;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            border: 0;
-        }
-        .quick-task-form {
-            display: flex;
-            gap: var(--spacing-sm);
-        }
-        .quick-task-form .form-group {
-            flex-grow: 1;
-            margin-bottom: 0;
-        }
-    `;
-    document.head.appendChild(style);
 });

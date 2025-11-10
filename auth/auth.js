@@ -1,45 +1,35 @@
-// Wait for the DOM to be fully loaded before running the script
 document.addEventListener('DOMContentLoaded', () => {
 
-    // =====================================
-    // --- NEW LOGOUT HANDLER ---
-    // =====================================
-
+    // --- Logout Message Handler ---
     const params = new URLSearchParams(window.location.search);
-    if (params.get('status') === 'logged_out') {
-        const formMessage = document.getElementById('form-message');
-        if (formMessage) {
-            formMessage.textContent = 'You have been logged out.';
-            formMessage.className = 'form-message success';
-        }
+    const formMessage = document.getElementById('form-message');
+    
+    if (params.get('status') === 'logged_out' && formMessage) {
+        formMessage.textContent = 'You have been logged out.';
+        // Use Bootstrap alert classes
+        formMessage.className = 'alert alert-success mb-3';
     }
     
-    // =====================================
-    // --- REGISTER FORM HANDLER ---
-    // =====================================
-    
-    // Find the registration form
+    // --- Register Form Handler ---
     const registerForm = document.getElementById('register-form');
     
     if (registerForm) {
-        // Add a 'submit' event listener to the registration form
         registerForm.addEventListener('submit', async (event) => {
-            // 1. Prevent the default form submission (which reloads the page)
             event.preventDefault();
             
-            // 2. Clear previous errors
             clearErrors();
-            const formMessage = document.getElementById('form-message');
-            formMessage.textContent = '';
-            formMessage.className = 'form-message'; // Reset class
+            // Reset message
+            if (formMessage) {
+                formMessage.textContent = '';
+                formMessage.className = '';
+            }
 
-            // 3. Get form data
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const password_confirm = document.getElementById('password_confirm').value;
 
-            // 4. Client-side validation (for instant feedback)
+            // Client-side validation
             let isValid = true;
             if (name.trim() === '') {
                 showError('name-error', 'Name is required.');
@@ -61,11 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 isValid = false;
             }
 
-            if (!isValid) {
-                return; // Stop if client-side validation fails
-            }
+            if (!isValid) return;
 
-            // 5. Prepare data to send to the server
             const formData = {
                 name: name,
                 email: email,
@@ -74,34 +61,30 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                // 6. Use the fetch() API to send data to the backend
                 const response = await fetch('../api/register.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
 
                 const result = await response.json();
 
-                // 7. Handle the server's response
                 if (result.status === 'success') {
-                    // Show success message
-                    formMessage.textContent = result.message;
-                    formMessage.className = 'form-message success';
-                    
-                    // Redirect to login page after a short delay
+                    if (formMessage) {
+                        formMessage.textContent = result.message;
+                        // Use Bootstrap alert classes
+                        formMessage.className = 'alert alert-success mb-3';
+                    }
                     setTimeout(() => {
                         window.location.href = 'login.html';
-                    }, 2000); // 2-second delay
+                    }, 2000); 
 
                 } else {
-                    // Show general error message
-                    formMessage.textContent = result.message || 'An error occurred.';
-                    formMessage.className = 'form-message error';
-
-                    // Show specific field errors if the server sent them
+                    if (formMessage) {
+                        formMessage.textContent = result.message || 'An error occurred.';
+                        // Use Bootstrap alert classes
+                        formMessage.className = 'alert alert-danger mb-3';
+                    }
                     if (result.errors) {
                         for (const key in result.errors) {
                             showError(`${key}-error`, result.errors[key]);
@@ -110,37 +93,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
             } catch (error) {
-                // Handle network errors
                 console.error('Fetch error:', error);
-                formMessage.textContent = 'A network error occurred. Please try again.';
-                formMessage.className = 'form-message error';
+                if (formMessage) {
+                    formMessage.textContent = 'A network error occurred. Please try again.';
+                    // Use Bootstrap alert classes
+                    formMessage.className = 'alert alert-danger mb-3';
+                }
             }
         });
     }
 
-    // =====================================
-    // --- LOGIN FORM HANDLER ---
-    // =====================================
-
-    // Find the login form
+    // --- Login Form Handler ---
     const loginForm = document.getElementById('login-form');
 
     if (loginForm) {
         loginForm.addEventListener('submit', async (event) => {
-            // 1. Prevent the default form submission
             event.preventDefault();
 
-            // 2. Clear previous errors
             clearErrors();
-            const formMessage = document.getElementById('form-message');
-            formMessage.textContent = '';
-            formMessage.className = 'form-message'; // Reset class
+            // Reset message
+            if (formMessage) {
+                formMessage.textContent = '';
+                formMessage.className = '';
+            }
 
-            // 3. Get form data
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            // 4. Client-side validation
             let isValid = true;
             if (email.trim() === '') {
                 showError('email-error', 'Email is required.');
@@ -154,49 +133,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 isValid = false;
             }
 
-            if (!isValid) {
-                return; // Stop if client-side validation fails
-            }
+            if (!isValid) return;
 
-            // 5. Prepare data to send to the server
             const formData = {
                 email: email,
                 password: password
             };
 
             try {
-                // 6. Use the fetch() API to send data to the backend
                 const response = await fetch('../api/login.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
 
                 const result = await response.json();
 
-                // 7. Handle the server's response
                 if (result.status === 'success') {
-                    // Show success message
-                    formMessage.textContent = result.message;
-                    formMessage.className = 'form-message success';
-                    
-                    // Redirect to the dashboard
-                    // We use the redirect URL from the server
+                    if (formMessage) {
+                        formMessage.textContent = result.message;
+                        // Use Bootstrap alert classes
+                        formMessage.className = 'alert alert-success mb-3';
+                    }
                     setTimeout(() => {
                         window.location.href = result.redirect;
-                    }, 1000); // 1-second delay
+                    }, 1000);
 
                 } else {
-                    // Show general error message
-                    formMessage.textContent = result.message || 'An error occurred.';
-                    formMessage.className = 'form-message error';
-                    
-                    // Clear password field on error
+                    if (formMessage) {
+                        formMessage.textContent = result.message || 'An error occurred.';
+                        // Use Bootstrap alert classes
+                        formMessage.className = 'alert alert-danger mb-3';
+                    }
                     document.getElementById('password').value = ''; 
                     
-                    // Show specific field errors if the server sent them
                     if (result.errors) {
                         for (const key in result.errors) {
                             showError(`${key}-error`, result.errors[key]);
@@ -205,37 +175,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
             } catch (error) {
-                // Handle network errors
                 console.error('Fetch error:', error);
-                formMessage.textContent = 'A network error occurred. Please try again.';
-                formMessage.className = 'form-message error';
+                if (formMessage) {
+                    formMessage.textContent = 'A network error occurred. Please try again.';
+                    // Use Bootstrap alert classes
+                    formMessage.className = 'alert alert-danger mb-3';
+                }
             }
         });
     }
 
 
-    // =====================================
-    // --- HELPER FUNCTIONS (Existing) ---
-    // =====================================
+    // --- Helper Functions (Updated) ---
 
     function showError(elementId, message) {
         const errorElement = document.getElementById(elementId);
         if (errorElement) {
             errorElement.textContent = message;
-            errorElement.style.display = 'block';
+            // No need for display:block, text-danger class is enough
         }
     }
 
     function clearErrors() {
-        const errorMessages = document.querySelectorAll('.error-message');
+        // We find by class now, but IDs are still used to populate
+        const errorMessages = document.querySelectorAll('.text-danger.small.mt-1');
         errorMessages.forEach(el => {
             el.textContent = '';
-            el.style.display = 'none';
         });
     }
 
     function validateEmail(email) {
-        // A simple regex for email validation
         const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
         return re.test(String(email).toLowerCase());
     }
