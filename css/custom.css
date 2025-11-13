@@ -29,6 +29,10 @@ body { background-color: #f8f9fa; }
 a {
     color: #007bff;
 }
+
+a:hover {
+    color: #0056b3;
+}
 /* Custom styles for tag items in modal */
 .tag-item-input {
     border: 1px solid transparent;
