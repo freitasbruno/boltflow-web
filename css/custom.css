@@ -8,6 +8,7 @@ body { background-color: #f8f9fa; }
     justify-content: center;
     padding-bottom: 40px;
     padding-top: 40px;
+    min-height: 100vh;
 }
 
 .card {
