@@ -25,6 +25,10 @@ body { background-color: #f8f9fa; }
     background-color: #0069d9;
     border-color: #0062cc;
 }
+
+a {
+    color: #007bff;
+}
 /* Custom styles for tag items in modal */
 .tag-item-input {
     border: 1px solid transparent;
